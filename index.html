@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sanwithz House</title>
+  <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+
+  <!-- Sweet Alert -->
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Loading Overlay -->
+  <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
+
+<!-- LIFF SDK --> 
+<script  src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+
+
+  <!-- pdfmake-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai');
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans Thai', sans-serif;
+    }
+
+    .list {
+      background-color: #ffffff;
+      padding: 1.8em 1.2em;
+      box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+      border-radius: 0.6em;
+    }
+  </style>
+
+</head>
+
+<body class="bg-green-200 p-2">
+  <form id="invoiceForm">
+  <div class="bg-white p-4 rounded-lg shadow-md">
+    <div class="mb-4">
+      <label class="block font-bold">ห้องเช่า <span class="text-red-500">*</span></label>
+      <select id="roomNumber" class="border rounded p-2 w-full">
+        <option value="">เลือกห้องเช่า</option>
+        <option value="ห้อง A101">ห้อง A101</option>
+        <option value="ห้อง A102">ห้อง A102</option>
+        <option value="ห้อง A103">ห้อง A103</option>
+        <option value="ห้อง A104">ห้อง A104</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <span class="text-blue-600 ml-2">รายการค่าน้ำ ค่าไฟ</span>
+    </div>
+    <div class="mb-4 grid grid-cols-12 gap-2 text-center font-bold">
+      <div class="col-span-1">#</div>
+      <div class="col-span-2">เลขครั้งนี้</div>
+      <div class="col-span-2">เลขครั้งก่อน</div>
+      <div class="col-span-2">ผลต่างหน่วย</div>
+      <div class="col-span-2">ราคาต่อหน่วย</div>
+      <div class="col-span-2">จำนวนเงิน (บาท)</div>
+    </div>
+    <div class="mb-4 grid grid-cols-12 gap-2 items-center">
+      <div class="col-span-1">ค่าน้ำ</div>
+      <input type="text" id="waterCurrent" class="col-span-2 border rounded p-2 bg-yellow-100" oninput="calculate()">
+      <input type="text" id="waterPrevious" class="col-span-2 border rounded p-2 bg-yellow-100" oninput="calculate()">
+      <input type="text" id="waterUnits" class="col-span-2 border rounded p-2 bg-gray-200" readonly>
+      <input type="text" id="waterRate" class="col-span-2 border rounded p-2 bg-yellow-100" value="20" oninput="calculate()">
+      <input type="text" id="waterAmount" class="col-span-2 border rounded p-2 bg-gray-200" readonly>
+    </div>
+    <div class="mb-4 grid grid-cols-12 gap-2 items-center">
+      <div class="col-span-1">ค่าไฟฟ้า</div>
+      <input type="text" id="electricCurrent" class="col-span-2 border rounded p-2 bg-yellow-100" oninput="calculate()">
+      <input type="text" id="electricPrevious" class="col-span-2 border rounded p-2 bg-yellow-100" oninput="calculate()">
+      <input type="text" id="electricUnits" class="col-span-2 border rounded p-2 bg-gray-200" readonly>
+      <input type="text" id="electricRate" class="col-span-2 border rounded p-2 bg-yellow-100" value="8" oninput="calculate()" readonly>
+      <input type="text" id="electricAmount" class="col-span-2 border rounded p-2 bg-gray-200" readonly>
+    </div>
+    <div class="mb-4">
+      <span class="text-blue-600 ml-2">รายการเพิ่มเติมอื่นๆ</span>
+    </div>
+    <div class="mb-4">
+      <div class="grid grid-cols-12 gap-2 items-center">
+        <input type="checkbox" id="tvFee" class="col-span-1" onclick="calculate()">
+        <div class="col-span-8">1. ค่าจานดำทีวี</div>
+        <input type="text" id="tvFeeAmount" class="mt-2 col-span-2 border rounded p-2 bg-gray-200" value="100" oninput="calculate()">
+      </div>
+      <div class="grid grid-cols-12 gap-2 items-center">
+        <input type="checkbox" id="serviceFee" class="col-span-1" onclick="calculate()">
+        <div class="col-span-8">2. ค่าโรงจอดรถ</div>
+        <input type="text" id="serviceFeeAmount" class="mt-2 col-span-2 border rounded p-2 bg-gray-200" value="100" oninput="calculate()">
+      </div>
+      <div class="grid grid-cols-12 gap-2 items-center">
+        <input type="checkbox" id="garbageFee" class="col-span-1" onclick="calculate()">
+        <div class="col-span-8">3. ค่าขยะ</div>
+        <input type="text" id="garbageFeeAmount" class="mt-2 col-span-2 border rounded p-2 bg-gray-200" value="100" oninput="calculate()">
+      </div>
+    </div>
+
+    <div class="mb-4 grid grid-cols-12 gap-2">
+      <div class="col-span-9 font-bold">รวมเป็นเงิน</div>
+      <div class="col-span-3">
+        <input type="text" id="totalAmount" class="border rounded p-2 bg-green-200 w-full" readonly>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="block">หมายเหตุ *</label>
+      <input type="text" class="border rounded p-2 bg-yellow-100 w-full" value="" placeholder="สำหรับใช้เช่าระบุหมายเหตุตามต้องการ">
+    </div>
+    <div>
+      <button class="bg-blue-500 text-white p-2 rounded" onclick="saveData()"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button>
+    </div>
+    <div class="mb-3 mt-3">
+      <button class="bg-blue-500 text-white p-2 rounded" onclick="sendFlexMessage()"><i class="fa-brands fa-line"></i> Send Flex Message</button>
+    </div>
+    <div class="mb-4">
+      <button class="bg-blue-500 text-white p-2 rounded" onclick="createPDF()"><i class="fa-solid fa-file-pdf"></i> Create PDF</button>
+    </div>
+  </div>
+  </form>
+  
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  initializeLiff('XXXXXXXX'); // แก้ไข 1
+});
+
+function initializeLiff(liffId) {
+  liff.init({ liffId })
+    .then(() => {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      }
+    })
+    .catch(err => {
+      console.error('LIFF Initialization failed', err);
+    });
+}
+
+function sendFlexMessage() {
+  const roomNumber = document.getElementById('roomNumber').value;
+  const tvFeeAmount = document.getElementById('tvFee').checked ? parseFloat(document.getElementById('tvFeeAmount').value) : 0;
+  const serviceFeeAmount = document.getElementById('serviceFee').checked ? parseFloat(document.getElementById('serviceFeeAmount').value) : 0;
+  const garbageFeeAmount = document.getElementById('garbageFee').checked ? parseFloat(document.getElementById('garbageFeeAmount').value) : 0;
+
+  const flexMessage = {
+    "type": "flex",
+    "altText": "This is a Flex Message",
+    "contents": {
+      "type": "bubble",
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "ใบแจ้งค่าเช่าหอพัก (E-Bill)",
+            "weight": "bold",
+            "color": "#1DB446",
+            "size": "sm"
+          },
+          {
+            "type": "text",
+            "text": "หอพักบ้านหลังเขา",
+            "weight": "bold",
+            "size": "xxl",
+            "margin": "md"
+          },
+          {
+            "type": "text",
+            "text": "Flex Tower, 7-7-4 Naklang, Thailand",
+            "size": "xs",
+            "color": "#aaaaaa",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "xxl"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "ห้องพักหมายเลข : " + roomNumber,
+                "size": "md",
+                "color": "#555555",
+                "weight": "bold"
+              }
+            ],
+            "margin": "xl"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "รายการค่าน้ำค่าไฟ",
+                    "size": "xs",
+                    "color": "#aaaaaa",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ค่าน้ำ",
+                    "size": "sm",
+                    "color": "#555555",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": document.getElementById('waterAmount').value + " บาท",
+                    "size": "sm",
+                    "color": "#111111",
+                    "align": "end"
+                  }
+                ],
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ค่าไฟ",
+                    "size": "sm",
+                    "color": "#555555",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": document.getElementById('electricAmount').value + " บาท",
+                    "size": "sm",
+                    "color": "#111111",
+                    "align": "end"
+                  }
+                ]
+              },
+              {
+                "type": "separator",
+                "margin": "xxl"
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "รายการเพิ่มเติมอื่นๆ",
+                    "size": "xs",
+                    "color": "#aaaaaa",
+                    "wrap": true
+                  }
+                ],
+                "margin": "xxl",
+                "spacing": "sm"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ค่าจานดำทีวี",
+                    "size": "sm",
+                    "color": "#555555"
+                  },
+                  {
+                    "type": "text",
+                    "text": tvFeeAmount + " บาท",
+                    "size": "sm",
+                    "color": "#111111",
+                    "align": "end"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ค่าโรงจอดรถ",
+                    "size": "sm",
+                    "color": "#555555"
+                  },
+                  {
+                    "type": "text",
+                    "text": serviceFeeAmount + " บาท",
+                    "size": "sm",
+                    "color": "#111111",
+                    "align": "end"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "ค่าขยะ",
+                    "size": "sm",
+                    "color": "#555555"
+                  },
+                  {
+                    "type": "text",
+                    "text": garbageFeeAmount + " บาท",
+                    "size": "sm",
+                    "color": "#111111",
+                    "align": "end"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "รวมทั้งสิ้น :",
+                    "size": "md",
+                    "color": "#555555",
+                    "weight": "bold"
+                  },
+                  {
+                    "type": "text",
+                    "text": document.getElementById('totalAmount').value + " บาท",
+                    "size": "md",
+                    "color": "#111111",
+                    "align": "end",
+                    "weight": "bold"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "xxl"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "ติดต่อสอบถามเพิ่มเติม",
+                "size": "xs",
+                "color": "#aaaaaa",
+                "flex": 0,
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "098-765-4321",
+                "color": "#aaaaaa",
+                "size": "xs",
+                "align": "end"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  liff.shareTargetPicker([flexMessage])
+    .then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Message Sent!',
+        text: 'Your Flex message has been sent successfully.'
+      });
+    })
+    .catch((err) => {
+      console.error('Error sending message: ', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Message Not Sent',
+        text: 'There was an error sending your message.'
+      });
+    });
+}
+
+function calculate() {
+  let waterCurrent = parseFloat(document.getElementById('waterCurrent').value) || 0;
+  let waterPrevious = parseFloat(document.getElementById('waterPrevious').value) || 0;
+  let waterRate = parseFloat(document.getElementById('waterRate').value) || 0;
+
+  let electricCurrent = parseFloat(document.getElementById('electricCurrent').value) || 0;
+  let electricPrevious = parseFloat(document.getElementById('electricPrevious').value) || 0;
+  let electricRate = parseFloat(document.getElementById('electricRate').value) || 0;
+
+  let waterUnits = waterCurrent - waterPrevious;
+  let waterAmount = waterUnits * waterRate;
+
+  let electricUnits = electricCurrent - electricPrevious;
+  let electricAmount = electricUnits * electricRate;
+
+  document.getElementById('waterUnits').value = waterUnits.toLocaleString();
+  document.getElementById('waterAmount').value = waterAmount.toLocaleString();
+
+  document.getElementById('electricUnits').value = electricUnits.toLocaleString();
+  document.getElementById('electricAmount').value = electricAmount.toLocaleString();
+
+  let tvFee = document.getElementById('tvFee').checked ? parseFloat(document.getElementById('tvFeeAmount').value) : 0;
+  let serviceFee = document.getElementById('serviceFee').checked ? parseFloat(document.getElementById('serviceFeeAmount').value) : 0;
+  let garbageFee = document.getElementById('garbageFee').checked ? parseFloat(document.getElementById('garbageFeeAmount').value) : 0;
+
+  let totalAmount = waterAmount + electricAmount + tvFee + serviceFee + garbageFee;
+
+  document.getElementById('totalAmount').value = totalAmount.toLocaleString();
+}
+
+function saveData() {
+  const roomNumber = document.getElementById('roomNumber').value;
+  if (!roomNumber) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'กรุณาเลือกห้องเช่า',
+      text: 'คุณยังไม่ได้เลือกห้องเช่า กรุณาเลือกห้องเช่าก่อนบันทึกข้อมูล'
+    });
+    return;
+  }
+
+  const data = {
+    roomNumber: document.getElementById('roomNumber').value,
+    waterCurrent: parseFloat(document.getElementById('waterCurrent').value) || 0,
+    waterPrevious: parseFloat(document.getElementById('waterPrevious').value) || 0,
+    waterRate: parseFloat(document.getElementById('waterRate').value) || 0,
+    waterUnits: parseFloat(document.getElementById('waterUnits').value.replace(/,/g, '')) || 0,
+    waterAmount: parseFloat(document.getElementById('waterAmount').value.replace(/,/g, '')) || 0,
+    electricCurrent: parseFloat(document.getElementById('electricCurrent').value) || 0,
+    electricPrevious: parseFloat(document.getElementById('electricPrevious').value) || 0,
+    electricRate: parseFloat(document.getElementById('electricRate').value) || 0,
+    electricUnits: parseFloat(document.getElementById('electricUnits').value.replace(/,/g, '')) || 0,
+    electricAmount: parseFloat(document.getElementById('electricAmount').value.replace(/,/g, '')) || 0,
+    tvFeeAmount: document.getElementById('tvFee').checked ? parseFloat(document.getElementById('tvFeeAmount').value) : 0,
+    serviceFeeAmount: document.getElementById('serviceFee').checked ? parseFloat(document.getElementById('serviceFeeAmount').value) : 0,
+    garbageFeeAmount: document.getElementById('garbageFee').checked ? parseFloat(document.getElementById('garbageFeeAmount').value) : 0,
+    totalAmount: parseFloat(document.getElementById('totalAmount').value.replace(/,/g, '')) || 0
+  };
+
+  $.LoadingOverlay("show");
+
+  const url = 'https://script.google.com/macros/s/XXXXXXXXX/exec'; // แก้ไข 2
+  fetch(url, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  }).then(response => {
+    console.log('Data saved to Google Sheets:', response);
+    $.LoadingOverlay("hide");
+    Swal.fire({
+      icon: 'success',
+      title: 'Data Saved',
+      text: 'Data has been saved successfully to Google Sheets.'
+    }).then(() => {
+      // Reset the form
+      document.getElementById('invoiceForm').reset();
+      
+      // Fetch the new JSON data
+      fetchNewData(roomNumber);
+    });
+  }).catch(error => {
+    console.error('Error saving data to Google Sheets:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Data Not Saved',
+      text: 'There was an error saving your data.'
+    });
+  });
+}
+
+function fetchNewData(roomNumber) {
+  if (roomNumber !== 'เลือกห้องเช่า') {
+    $.LoadingOverlay("show");
+    fetch(`https://opensheet.elk.sh/XXXXXXXXXX/Form`) // แก้ไข 3
+      .then(response => response.json())
+      .then(data => {
+        const filteredData = data.filter(item => item.roomNumber === roomNumber);
+        if (filteredData.length > 0) {
+          const lastEntry = filteredData[filteredData.length - 1];
+          document.getElementById('waterPrevious').value = lastEntry.waterLatest;
+          document.getElementById('electricPrevious').value = lastEntry.electricLatest;
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'No Data Found',
+            text: `No previous data found for room number ${roomNumber}`
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'There was an error fetching the previous data.'
+        });
+      })
+      .finally(() => {
+        $.LoadingOverlay("hide");
+      });
+  } else {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Room Selected',
+      text: 'Please select a room number.'
+    });
+  }
+}
+
+document.getElementById('roomNumber').addEventListener('change', function() {
+  const roomNumber = this.value;
+  fetchNewData(roomNumber);
+});
+
+
+function createPDF() {
+  // Define Thai fonts
+  pdfMake.fonts = {
+    THSarabunNew: {
+      normal: 'https://sanwithz.github.io/font/THSarabunNew.ttf',
+      bold: 'https://sanwithz.github.io/font/THSarabunNewBold.ttf',
+      italics: 'https://sanwithz.github.io/font/THSarabunNewItalic.ttf',
+    }
+  };
+
+  const roomNumber = document.getElementById('roomNumber').value;
+  const waterAmount = document.getElementById('waterAmount').value;
+  const electricAmount = document.getElementById('electricAmount').value;
+  const tvFeeAmount = document.getElementById('tvFee').checked ? parseFloat(document.getElementById('tvFeeAmount').value) : 0;
+  const serviceFeeAmount = document.getElementById('serviceFee').checked ? parseFloat(document.getElementById('serviceFeeAmount').value) : 0;
+  const garbageFeeAmount = document.getElementById('garbageFee').checked ? parseFloat(document.getElementById('garbageFeeAmount').value) : 0;
+  const totalAmount = document.getElementById('totalAmount').value;
+
+  const docDefinition = {
+    pageSize: 'A7',
+    pageMargins: [20, 20, 20, 20], // Optional: Adjust margins as needed
+    content: [
+      { text: 'ใบแจ้งค่าเช่าหอพัก (E-Bill)', style: 'header' },
+      { text: 'หอพักบ้านหลังเขา', style: 'subheader' },
+      { text: 'Flex Tower, 7-7-4 Naklang, Thailand', style: 'address' },
+      { text: `ห้องพักหมายเลข: ${roomNumber}`, style: 'roomNumber' },
+      { text: 'รายการค่าน้ำค่าไฟ', style: 'sectionHeader' },
+      { text: `ค่าน้ำ: ${waterAmount} บาท`, style: 'item' },
+      { text: `ค่าไฟ: ${electricAmount} บาท`, style: 'item' },
+      { text: 'รายการเพิ่มเติมอื่นๆ', style: 'sectionHeader' },
+      { text: `ค่าจานดำทีวี: ${tvFeeAmount} บาท`, style: 'item' },
+      { text: `ค่าโรงจอดรถ: ${serviceFeeAmount} บาท`, style: 'item' },
+      { text: `ค่าขยะ: ${garbageFeeAmount} บาท`, style: 'item' },
+      { text: `รวมทั้งสิ้น: ${totalAmount} บาท`, style: 'total' },
+      { text: 'ติดต่อสอบถามเพิ่มเติม: 098-765-4321', style: 'footer' }
+    ],
+    styles: {
+      header: { fontSize: 10, bold: true, margin: [0, 0, 0, 10], alignment: 'center' },
+      subheader: { fontSize: 8, bold: true, margin: [0, 0, 0, 3], alignment: 'center' },
+      address: { fontSize: 7, margin: [0, 0, 0, 10], alignment: 'center' },
+      roomNumber: { fontSize: 8, bold: true, margin: [0, 0, 0, 7] },
+      sectionHeader: { fontSize: 8, bold: true, margin: [0, 0, 0, 5] },
+      item: { fontSize: 8, margin: [0, 0, 0, 2] },
+      total: { fontSize: 8, bold: true, margin: [0, 10, 0, 5] },
+      footer: { fontSize: 8, margin: [0, 10, 0, 0] }
+    },
+    defaultStyle: {
+      font: 'THSarabunNew'
+    }
+  };
+
+  pdfMake.createPdf(docDefinition).open();
+}
+
+    
+
+
+    
+  </script>
+</body>
+
+</html>
