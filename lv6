@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Rental Form with Image Upload</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+
+    <!-- Sweet Alert -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Loading Overlay -->
+    <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
+
+</head>
+<body class="bg-gray-100 p-5">
+    <div class="container">
+        <h1 class="text-2xl font-bold mb-4">Room Rental Form</h1>
+        <form id="rentalForm" class="bg-white p-4 rounded shadow-md">
+            <div class="mb-3">
+                <label for="roomNumber" class="block font-bold">Room Number:</label>
+                <select id="roomNumber" class="border rounded p-2 w-full">
+                    <option value="">Select Room</option>
+                    <option value="A101">A101</option>
+                    <option value="A102">A102</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="waterCurrent" class="block font-bold">Water Current Reading:</label>
+                <input type="number" id="waterCurrent" name="waterCurrent" class="border rounded p-2 w-full" placeholder="Enter current reading" oninput="calculate()">
+            </div>
+            
+            <div class="mb-3">
+                <label for="electricCurrent" class="block font-bold">Electric Current Reading:</label>
+                <input type="number" id="electricCurrent" name="electricCurrent" class="border rounded p-2 w-full" placeholder="Enter current reading" oninput="calculate()">
+            </div>
+            
+            <div class="mb-3">
+                <label class="block font-bold">Total:</label>
+                <input type="text" id="totalAmount" name="totalAmount" class="border rounded p-2 w-full bg-gray-200" readonly>
+            </div>
+
+
+            <div class="mb-3">
+                <label for="file" class="form-label">อัพโหลดรูปภาพ</label>
+                <input type="file" id="file" name="file" class="form-control" accept="image/*" required>
+            </div>
+
+            <div class="mb-3">
+                <img src="https://via.placeholder.com/100" alt="รูปภาพ" id="preview" class="img-thumbnail">
+            </div>
+            
+            <div class="mb-3">
+                <button type="submit" id="saveData" class="btn btn-primary">Save Data</button>
+                <button type="button" id="generatePDF" class="btn btn-warning">Generate PDF Bill</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const url = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec"; // Replace with your Google Apps Script URL
+        const fileInput = document.querySelector("input[type='file']");
+        const img = document.querySelector("img");
+        const form = document.getElementById("rentalForm");
+
+        // Function to preview image on file input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            $.LoadingOverlay("show");
+
+
+            const roomNumber = document.getElementById("roomNumber").value;
+            const waterCurrent = document.getElementById("waterCurrent").value;
+            const electricCurrent = document.getElementById("electricCurrent").value;
+            const totalAmount = document.getElementById("totalAmount").value;
+
+            if (fileInput.files.length === 0) {
+                Swal.fire('Error', 'Please select a file.', 'error');
+                $.LoadingOverlay("hide");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result;
+                img.src = result;
+                const base64String = result.split("base64,")[1];
+
+                const data = {
+                    base64: base64String,
+                    type: file.type,
+                    name: file.name,
+                    roomNumber: roomNumber,
+                    waterCurrent: waterCurrent,
+                    electricCurrent: electricCurrent,
+                    totalAmount: totalAmount
+                };
+
+                fetch(url, {
+                    method: "POST",
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    Swal.fire('Success', data, 'success');
+                    $.LoadingOverlay("hide");
+                    form.reset(); // Reset form after submission
+                    img.src = "https://via.placeholder.com/100"; // Reset image preview
+                })
+                .catch(error => {
+                    Swal.fire('Error', error.toString(), 'error');
+                    $.LoadingOverlay("hide");
+                });
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        function calculate() {
+            let water = parseFloat(document.getElementById('waterCurrent').value) || 0;
+            let electric = parseFloat(document.getElementById('electricCurrent').value) || 0;
+            let total = water + electric;
+            document.getElementById('totalAmount').value = total.toLocaleString();
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+CODE.GS
+var DRIVE_FOLDER_ID = 'XXXXXXXXXX'; // Folder ID
+
+function doPost(e) {
+    var data = JSON.parse(e.postData.contents);
+    var base64 = data.base64;
+    var blob = Utilities.newBlob(Utilities.base64Decode(base64), data.type, data.name);
+    var file = DriveApp.getFolderById(DRIVE_FOLDER_ID).createFile(blob);
+    var fileLink = "https://lh5.googleusercontent.com/d/" + file.getId();
+    
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("withUpload"); // Replace 'data' with your sheet name
+    var lastRow = sheet.getLastRow() + 1;
+    sheet.getRange(lastRow, 1, 1, 4).setValues([[data.roomNumber, data.waterCurrent, data.electricCurrent, data.totalAmount]]);
+    sheet.getRange(lastRow, 5).setFormula('=IMAGE("' + fileLink + '")');
+
+    return ContentService.createTextOutput("Data and image uploaded successfully. Link: " + fileLink);
+}
