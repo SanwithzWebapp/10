@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Registration Form</title>
+</head>
+<body>
+
+  <main class="container">
+    <div class="container form-container">
+      <form id="registration-form" class="mt-4">
+        <div class="row mb-3">
+          <label for="name" class="col-form-label">Name:</label>
+          <div class="col">
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <label for="email" class="col-form-label">Email:</label>
+          <div class="col">
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <label for="tel" class="col-form-label">Telephone:</label>
+          <div class="col">
+            <input type="tel" class="form-control" id="tel" name="tel" required>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <label for="address" class="col-form-label">Address:</label>
+          <div class="col">
+            <input type="text" class="form-control" id="address" name="address" required>
+          </div>
+        </div>
+        <center><button type="submit" class="btn btn-primary mt-3">Submit Registration</button></center>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/sanwithz/SetFooter/sanzwithz.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      liff.init({ liffId: ‘XXXXXXX’ })
+        .then(() => {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          } else {
+            console.log('LIFF initialized');
+            // Add event listener for form submission
+            document.getElementById('registration-form').addEventListener('submit', submitRegistration);
+          }
+        })
+        .catch((err) => {
+          console.error('Error initializing LIFF: ', err);
+          Swal.fire('Error', 'Failed to initialize LIFF: ' + err, 'error');
+        });
+    });
+
+
+    function submitRegistration(event) {
+      event.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const tel = document.getElementById('tel').value;
+      const address = document.getElementById('address').value;
+
+      const userData = { name, email, tel, address };
+      saveToSheet(userData);
+    }
+
+    function saveToSheet(data) {
+      $.LoadingOverlay("show");
+
+      const url = 'https://script.google.com/macros/s/AKfycbzx_7y6nYYIyFNXGK0ZiLKrxTN1N22BvmL9dsb70jvaSydel8shWaR3UlY2zD3Lwp7S0w/exec'; // Replace with your web app URL
+
+      $.post(url, JSON.stringify(data), function(response) {
+        $.LoadingOverlay("hide");
+        if (response.status === 'success') {
+          Swal.fire('Success', 'Registration data saved!', 'success');
+        } else {
+          Swal.fire('Error', 'Failed to save registration data!', 'error');
+        }
+      }).fail(function() {
+        $.LoadingOverlay("hide");
+        Swal.fire('Error', 'Failed to connect to the server!', 'error');
+      });
+    }
+
+
+    function formatThaiDate(date) {
+      const months = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+      ];
+      const day = date.getDate();
+      const month = months[date.getMonth()];
+      const year = date.getFullYear() + 543;
+      return `${day} ${month} ${year}`;
+    }
+  </script>
+
+  <footer class="text-center text-lg-start bg-light text-muted" style="position: static; left: 0; bottom: 0; width: 100%;">
+    <div class="footer-container"></div>
+  </footer>
+</body>
+</html>
